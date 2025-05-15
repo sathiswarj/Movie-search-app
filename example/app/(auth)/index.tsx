@@ -11,7 +11,8 @@ import { icons } from '@/constants/icons';
 import { Ionicons } from '@expo/vector-icons';
 import { Link, useRouter } from 'expo-router';
 import axios from 'axios';
- 
+import { useAuthStore } from '@/store/authStore';
+
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -19,28 +20,22 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const { loginUser } = useAuthStore();
 
   const router = useRouter();
 
   const handleLogin = async () => {
     setLoading(true);
-    setError('');
-    try {
-      const res = await axios.post('http://localhost:8050/api/auth/login', {
-        email,
-        password,
-      });
-       router.push('/(tabs)')
- 
-    } catch (err) {
-      if (axios.isAxiosError(err)) {
-        console.log(err.response?.data || err.message);
-      } else {
-        console.log(err);
-      }
-      setError('Invalid credentials');
-    } finally {
-      setLoading(false);
+    const result = await loginUser(email, password);
+    setLoading(false);
+
+    if (result.success) {
+      setEmail("");
+      setPassword("");
+      router.replace("/(tabs)");
+    } else {
+      alert(result.error || "Login failed");
+      setError(result.error);
     }
   };
 
@@ -74,7 +69,7 @@ export default function Login() {
             name='lock-closed-outline'
             size={20}
             color='white'
-           />
+          />
           <TextInput
             className='flex-1 py-2 outline-none text-white'
             placeholder='Enter your password'

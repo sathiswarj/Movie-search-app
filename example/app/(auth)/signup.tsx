@@ -4,7 +4,9 @@ import React, { useState } from 'react';
 import { icons } from '@/constants/icons';
 import { Ionicons } from '@expo/vector-icons';
 import { Link, useRouter } from 'expo-router';
- 
+ import { useAuthStore } from '@/store/authStore'; 
+
+
 export default function Signup() {
   const [userName, setUserName] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
@@ -13,28 +15,26 @@ export default function Signup() {
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("");
- 
+ const { addUser } = useAuthStore();
    const router = useRouter();
 
 const handleSignup = async () => {
-  try {
-    await axios.post('http://localhost:8050/api/auth/register', {
-      userName,
-      phoneNumber,
-      email,
-      password
-    });
-    alert('Signup successful!');
-    setUserName("")
-    setEmail("")
-    setPassword("")
-    setPhoneNumber("")
-  } catch (err: any) {
-    const msg = err?.response?.data?.message || 'Signup failed';
-    alert(msg);
+  setLoading(true);
+  const result = await addUser(userName, email, phoneNumber, password);
+  setLoading(false);
+
+  if (result.success) {
+    alert("Signup successful!");
+    setUserName("");
+    setEmail("");
+    setPhoneNumber("");
+    setPassword("");
+    router.replace("/(tabs)"); 
+  } else {
+    alert(result.error || "Signup failed");
+    setError(result.error);
   }
 };
-
 
   return (
     <View className='flex-1 bg-primary justify-center px-6'>
